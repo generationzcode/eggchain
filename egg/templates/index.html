@@ -1,0 +1,53 @@
+
+<html>
+  <head>
+    <title>EggzRule</title>
+  </head>
+  <body>
+    <span id="initialized">{{ initialized }}</span>
+    <span id="network-name">
+      {{network_owner}}
+    </span>
+    <span id="network-host">
+      {{network_url}}
+    </span>
+    <!-- initialize will be optional -->
+    <div class="button" id="init" >Initialize Blockchain</div>
+    <div class="button not">View *your* plots</div>
+    <div class="button not">View the Virtual World</div>
+    <div class="button not">Mine a new plot!</div>
+    <div class="button not">Make a transaction</div>
+    <span class="network-head">Change your network -> </span>
+    <input type="text" id='owner' placeholder="network owner name">
+    <input type="text" id='host_url' placeholder="network host url">
+    <button id="submit">Change your network!</button>
+    <script>
+        var initialize = document.getElementById("initialized").innerText;
+        if (initialize == "True") {
+            for (let el of document.querySelectorAll('.not')){
+                el.style.visibility = 'hidden';
+            }
+        }
+        else {
+            document.getElementById("init").style.visibility = 'hidden'
+        }
+        function init(){
+          if (window.location.href.substr(8,6) == "eggnft"){
+            fetch("/initialize", {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers:{
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest', //Necessary to work with request.is_ajax()
+},
+    body: JSON.stringify({'url':window.location.href}) //JavaScript object of data to POST
+})
+.then(response => {
+        location.reload();
+}) 
+        }
+      }
+        document.getElementById("init").addEventListener("click", init, true);
+    </script>
+  </body>
+</html>
