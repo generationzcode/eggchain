@@ -8,8 +8,30 @@
     <h1>
       Transact here
     </h1>
+    <input type="text" id="x" placeholder='x coordinate of plot'>,
+    <input type="text" id="y" placeholder='y coordinate of plot'><br>
     <input type="text" id="key1" placeholder="recipient key part 1">
     <input type="text" id="key2" placeholder="recipient key part 2">
     <button id="submit"> TRANSACT!!!! </button>
+    <script>
+      function transaction(){
+          if (window.location.href.substr(8,6) == "eggnft"){
+            fetch("/make_transaction", {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers:{
+                  'Accept': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest',
+              },
+              body: JSON.stringify({'plot':[parseInt(document.getElementById("x").value),parseInt(document.getElementById("y").value)],
+                                   'key1':document.getElementById("key1").value,'key2':document.getElementById("key2").value})
+            })
+            .then(response => {
+              location.reload();
+            }) 
+          }
+        }
+      document.getElementById("submit").addEventListener("click", transaction, true);
+    </script>
   </body>
 </html>

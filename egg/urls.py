@@ -23,4 +23,5 @@ urlpatterns = [
   path('plots_owned',views.initialize,name="plots_owned"),
   path('change_network',views.change_network,name="change_network"),
   path('get_plot',views.get_plot_landscape,name="plot_landscape"),
+  path('assets',views.assets,name="assets")
 ]

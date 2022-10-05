@@ -5,10 +5,13 @@
     </title>
   </head>
   <body>
-    <!--code for loop for the assets-->
+    <!--code for loop for the assets and link each div to the appropriate edit page (make it get) -->
     <!-- add 3d sketch of each coord later -->
+    {% for i in plots %}
     <div>
-      <span class="coords" id="{asset plot coordinates here}">{asset plot coordinates here}</span>
+      <span class="coords" id="{{i.coords}}">{{i.coords}}</span>
     </div>
+    <br>
+    {% endfor %}
   </body>
 </html>

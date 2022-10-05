@@ -13,17 +13,18 @@
     </span>
     <!-- initialize will be optional -->
     <div class="button" id="init" >Initialize Blockchain</div>
-    <div class="button not">View *your* plots</div>
+    <div class="button not"><a href="/assets">View *your* plots</a></div>
+    <div class="button not">View *your* key</div>
     <div class="button not">View the Virtual World</div>
-    <div class="button not">Mine a new plot!</div>
-    <div class="button not">Make a transaction</div>
+    <div class="button not" id="mine">Mine a new block!</div>
+    <div class="button not"><a href="/transaction_form"">Make a transaction</a></div>
     <span class="network-head">Change your network -> </span>
     <input type="text" id='owner' placeholder="network owner name">
     <input type="text" id='host_url' placeholder="network host url">
     <button id="submit">Change your network!</button>
     <script>
         var initialize = document.getElementById("initialized").innerText;
-        if (initialize == "True") {
+        if (initialize == "False") {
             for (let el of document.querySelectorAll('.not')){
                 el.style.visibility = 'hidden';
             }
@@ -34,20 +35,50 @@
         function init(){
           if (window.location.href.substr(8,6) == "eggnft"){
             fetch("/initialize", {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers:{
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest', //Necessary to work with request.is_ajax()
-},
-    body: JSON.stringify({'url':window.location.href}) //JavaScript object of data to POST
-})
-.then(response => {
-        location.reload();
-}) 
+              method: 'POST',
+              credentials: 'same-origin',
+              headers:{
+                  'Accept': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest',
+              },
+              body: JSON.stringify({'url':window.location.href})
+            })
+            .then(response => {
+              location.reload();
+            }) 
+          }
         }
-      }
+        function network(){
+          if (window.location.href.substr(8,6) == "eggnft"){
+            fetch("/change_network", {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers:{
+                  'Accept': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest',
+              },
+              body: JSON.stringify({'owner':document.getElementById("owner").value,
+                                   'host_url':document.getElementById("host_url").value})
+            })
+            .then(response => {
+              location.reload();
+            }) 
+          }
+        }
+      var mined=false
+      function mine(){
+          if ((window.location.href.substr(8,6) == "eggnft")&&(mined==false)){
+            mined=true
+            document.getElementById("mine").innerHTML='(mining new block...) check on the console if its done mining then reload and mine again if u wish. '
+            fetch("/mine", {
+              method: 'POST',
+              credentials: 'same-origin',
+            })
+          }
+        }
+        document.getElementById("mine").addEventListener("click", mine, true);
         document.getElementById("init").addEventListener("click", init, true);
+        document.getElementById("submit").addEventListener("click", network, true);
     </script>
   </body>
 </html>

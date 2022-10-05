@@ -418,22 +418,48 @@ def broadcast_block_all(block):
     return True
 
 
+def write_network():
+  """
+  args->none
+  This stores the network url and owner in the json file. returns True
+  """
+  with open("network.json",'w') as outfile:
+    json.dump([network_owner,network_host],outfile)
+  return True
+
+
+def read_network():
+  """
+  args->none
+  Returns True, assigns the network vars with data from file
+  """
+  with open("network.json",'r') as outfile:
+    arr = json.load(outfile)
+    network_host=arr[1]
+    network_owner=arr[0]
+  return True
+
+    
 # getting started with the plots class finally
 
 
 class Plots():
+
+  
     def __init__(self):
         """
     functions to be carried out when initializing the server
     """
-        self.initialized = True
+        self.initialized = False
         self.current_transactions = []
         self.difficulty = 4
 
+  
     def initialize(self, personal_url):
         """
     initializing the blockchain
     """
+        read_network()
         write_personal_data(personal_url)
         keys = get_keys()
         personal_data = read_personal_data()
@@ -499,6 +525,7 @@ class Plots():
         self.initialized = True
         return True
 
+  
     def mine(self):
         """
     mining a block let people crash everything at this point idc.
@@ -508,12 +535,15 @@ class Plots():
         hash = block['hash']
         zero_string = generate_zero_string(self.difficulty)
         mined = False
+        print("MINING RN. Dont try and mine again or else problems shall occur... mostly the repl maxing out maybe")
         while mined == False:
             if hash_txt(hash + str(counter))[:self.difficulty] == zero_string:
                 mined = True
+            counter+=1
         self.new_block_mined(counter, block['index'])
         return True
 
+  
     def new_block_mined(self, nonce, index):
         """
     steps after mining is completed successfully, such as looking at whether the block is outdated or not
@@ -537,6 +567,7 @@ class Plots():
             self.first_transaction_in_block()
         return True
 
+  
     def new_block_recieved(self, block):
         """
     {block}
@@ -561,6 +592,7 @@ class Plots():
             })
         return True
 
+
     def add_recieved_transaction(self, transaction):
         """
     {transaction}
@@ -570,8 +602,13 @@ class Plots():
             self.current_transactions.append(transaction)
         return True
 
+
     # a transact transaction shall contain the type (edit or *transact*), plot, previous hash, owner public key, receiver public key, signature of the previous hash by the owner
+
+      
     # an edit transaction shall contain the type (*edit* or transact) public key of the owner, plot, signature of the hashed( edit hashed and the previous hash) concatenated, edit array in json
+
+      
     def new_transaction(self, plot, type, data):
         """
     plot,"type",{data}
@@ -589,6 +626,7 @@ class Plots():
                 'signature': signature_making(plot_e['hash'],get_keys()[1]),
                 "owner": me
             }
+            self.current_transactions.append(transaction)
             broadcast_transaction_all(transaction)
         else:
             plot_e = read_plot_db(plot)
@@ -609,9 +647,11 @@ class Plots():
                 signature_making(
                     hash_txt(plot_e['hash'] + hash_txt(to_json(data))),get_keys()[1])
             }
+            self.current_transactions.append(transaction)
             broadcast_transaction_all(transaction)
         return True
 
+  
     def check_transaction(self, transaction):
         """
     {transaction}
@@ -638,6 +678,7 @@ class Plots():
 
         return True
 
+  
     def first_transaction_in_block(self):
         """
     processes that award the miner a plot of land
@@ -694,6 +735,7 @@ class Plots():
         broadcast_transaction_all(transaction)
         return True
 
+  
     def check_block(self, block):
         """
     {block}
@@ -709,6 +751,7 @@ class Plots():
                 return False
         return True
 
+  
     def check_blockchain(self, peer):
         """
     look at one peer request its blockchain and it it checks out, let us have it
@@ -728,6 +771,7 @@ class Plots():
                 prev_hash = block['hash']
         return True
 
+  
     def log_transactions(self, block):
         """
     {block}
@@ -735,7 +779,7 @@ class Plots():
     """
         for i in block['transactions']:
             if i['type'] == 'transact':
-                if i['public_key'] == "egg":
+                if i['prev_public_key'] == "egg":
                     write_plot_db({
                         "coords":
                         i['plot'],
@@ -744,7 +788,7 @@ class Plots():
                         "owner":
                         i['owner'],
                         "owner_public_key":
-                        i['owner_public_key', 'landscape':[]]
+                        i['owner_public_key'], 'landscape':[]
                     })
                 else:
                     p = plots.objects.get(coords=to_json(i['plot']))
@@ -758,6 +802,7 @@ class Plots():
                 p.save()
         return True
 
+  
     def log_transactions_all(self):
         """
     goes through the blockchain database and logs all the transactions from every block in the database
@@ -787,6 +832,9 @@ urlpatterns = [
     path('new_block',views.new_block,name="new_block"),
     path('mine',views.mine,name="mine"),
     path('make_transaction',views.make_transaction,name="make_transaction"),
+
+
+    
     path('transaction_form',views.transaction_form,name="transaction_form"),
     path('plots',views.balance,name="plots"),
     path('public_key',views.public_key,name="public_key"),
@@ -797,8 +845,14 @@ urlpatterns = [
     path('initialize_view',views.initialize_view,name="initialize_view"),
   
 ]
+
+
 """
+
+
 the_plots = Plots()
+
+
 # work on this
 
 
@@ -869,14 +923,15 @@ def new_block(request):
 
 def mine(request):
     # mines a new block
+    the_plots.mine()
     return HttpResponse("epic")
 
 
 def make_transaction(request):
     # makes the transaction
-    plot_transacted = from_json(request.POST['plot'])
-    data1 = request.POST['public_key_1']
-    data2 = request.POST['public_key_2']
+    plot_transacted = from_json(request.body.decode('utf-8'))['plot']
+    data1 = int(from_json(request.body.decode('utf-8'))['key1'])
+    data2 = int(from_json(request.body.decode('utf-8'))['key2'])
     keys = [data1, data2]
     the_plots.new_transaction(plot_transacted, "transact", keys)
     return HttpResponse("epic")
@@ -885,7 +940,7 @@ def make_transaction(request):
 # work on this
 def transaction_form(request):
     # allows user to send plots data to people if they provide their pk
-    return HttpResponse("epic")
+    return render(request,"transaction.html",{})
 
 
 # work on this
@@ -907,7 +962,7 @@ def chain_length(request):
 
 def initialize(request):
     # gets the info about the repl name and initializes (done from index page)
-    repl_name = json.load(request)['url']
+    repl_name = from_json(request.body.decode('utf-8'))['url']
     the_plots.initialize(repl_name)
     return HttpResponse("epic")
 
@@ -918,6 +973,7 @@ def get_block(request):
 
 
 def get_owned_plots(request):
+    #returns the owned plots for use in the owned plots page
     owner = read_personal_data()[1]
     plots_mine = plots.objects.filter(owner=owner)
     list_mine = []
@@ -927,17 +983,27 @@ def get_owned_plots(request):
 
 
 def change_network(request):
-    network_owner = request.POST['owner']
-    network_host = request.POST['host_url']
+    #changes network and saves
+    print(str(request.body.decode('utf-8')))
+    network_owner = from_json(request.body.decode('utf-8'))['owner']
+    network_host = from_json(request.body.decode('utf-8'))['host_url']
     ping_all_peers()
     remove_block_db()
     the_plots.initialized=False
+    write_network()
     return HttpResponse("epic")
 
 
 def get_plot_landscape(request):
+    #returns the landscape for a single plot (used in edit and view)
     plot = request.POST['plot']
     if plots.objects.filter(coords=plot).exists():
         return HttpResponse(plots.objects.get(coords=plot).landscape)
     else:
         return HttpResponse("[]")
+
+
+def assets(request):
+  me = read_personal_data()[1]
+  my_plots = plots.objects.filter(owner=me)
+  return render(request,"assets.html",{'plots':my_plots})
