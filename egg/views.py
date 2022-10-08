@@ -661,7 +661,7 @@ class Plots():
             return True
 
         for i in self.current_transactions:
-            if (i['owner_public_key'] == transaction['owner_public_key']):
+            if (i['plot'] == transaction['plot']):
                 return False
 
         if transaction["type"] == 'transact':
